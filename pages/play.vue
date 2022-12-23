@@ -2,7 +2,7 @@
   <main class="relative w-full h-screen bg-slate-900">
     <span
       class="m-8 text-white font-semibold w-full txt-sm xl:text-lg 2xl:text-xl tracking-wide"
-      >Jeton : 10.000 F
+      >Jeton : {{ initAmount }} F
     </span>
     <button
       @click="refresh"
@@ -90,35 +90,113 @@
         </div>
       </div>
     </section>
-    <div class="absolute bottom-8 flex gap-4 justify-center w-full">
+    <div
+      class="absolute bottom-8 flex gap-4 justify-center w-full"
+    >
       <button
         @click="play"
         class="bg-yellow-600 hover:scale-105 transition duration-700 ease-in-out font-semibold rounded-lg drop-shadow-xl text-white p-4 sm:py-4 lg:px-10 sm:px-8 text-md sm:text-lg lg:txt-2xl xl:text-3xl 2xl:text-5xl tracking-widest"
       >
         Lancer
       </button>
-      <!--
-      <input
-        type="number"
-        class="rounded-lg bg-transparent text-white border-2 p-4"
-        placeholder="montant à parier"
-        autofocus
-      />
-      -->
+    </div>
+    <div
+      class="absolute bottom-2 flex gap-2 justify-start font-semibold text-center w-full text-white text-xs lg:txt-md tracking-wide"
+    >
+      <NuxtLink to="/" class="underline"> goder game </NuxtLink>
+      <a href="https://yatachi-code.org" target="_blank" class="underline">
+        par yatachi code
+      </a>
     </div>
   </main>
 </template>
 
 <script lang="ts" setup>
 import Swal from "sweetalert2";
+import { user } from "@/stores/user";
 import type { Ref } from "vue";
 definePageMeta({
   alias: "/jouer",
 });
+// store
+
+const User = user();
+const initAmount: number = User.$state.amount;
+// authorize
+
+function authorize(): boolean {
+  return User.$state.amount > 0 ? true : false;
+}
+// start
 let playStatus: Ref<boolean> = ref(false);
+
 let play = () => {
-  playStatus.value = true;
+  if (authorize()) {
+    playStatus.value = true;
+    setTimeout(() => {
+      function randomIntFromInterval(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+      }
+      let generateResult: Ref<number> = ref(randomIntFromInterval(1, 6));
+      // when user win
+      const win = tabBet.value.filter((items) => {
+        return items.id === generateResult.value;
+      });
+      if (win.length == 1) {
+        User.addAmount(win[0].amount);
+        Swal.fire({
+          title: "Gagner !!!",
+          text: `Numéro  : ${generateResult.value} `,
+          showCancelButton: true,
+          showConfirmButton: true,
+          color: "green",
+          confirmButtonText: "Continuer",
+          confirmButtonColor: " rgb(202 138 4 )",
+          cancelButtonText: "Fermer",
+        }).then((res) => {
+          if (res.isConfirmed || res.isDenied || res.isDismissed) {
+            refresh();
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Perdu ",
+          text: `Numéro  : ${generateResult.value} `,
+          showCancelButton: true,
+          showConfirmButton: true,
+          color: "red",
+          confirmButtonText: "Réjouer",
+          confirmButtonColor: " rgb(202 138 4)",
+          cancelButtonText: "Fermer",
+        }).then((res) => {
+          if (res.isConfirmed || res.isDenied || res.isDismissed) {
+            refresh();
+          }
+        });
+      }
+      // when user loose
+      const loose = tabBet.value.filter((items) => {
+        return items.id != generateResult.value;
+      });
+      if (loose.length >= 1) {
+        User.removeAmount(loose);
+      }
+      playStatus.value = false;
+    }, 2000);
+  } else {
+    Swal.fire({
+      title: "Champion ton djai est fini ☻ !!!",
+      showCancelButton: true,
+      showConfirmButton: true,
+      color: "orange",
+      confirmButtonText: "Continuer",
+      confirmButtonColor: " rgb(202 138 4 )",
+      cancelButtonText: "Fermer",
+    });
+  }
 };
+
+// other
 const tabBet: Ref<{ id: number; amount: number }[]> = ref([]);
 
 let isAddToTab = (id: number) => {
@@ -133,7 +211,6 @@ let isAddToTab = (id: number) => {
 
 let sendTabBet = (id: number, amount: number) => {
   tabBet.value.push({ id: id, amount: amount });
-  console.log(tabBet.value);
 };
 function bet(id: number) {
   const amount: number = 0;
@@ -178,6 +255,7 @@ function refresh() {
 }
 .spin {
   animation: spin 2s infinite linear;
+  animation-iteration-count: 1;
 }
 
 /* Style each side of the cube */

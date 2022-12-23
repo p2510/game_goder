@@ -30,6 +30,7 @@
 
       <h1 class="text-yellow-600">GODER GAME</h1>
     </div>
+
   </main>
 </template>
 

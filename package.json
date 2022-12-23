@@ -9,10 +9,12 @@
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.2.0",
+    "@pinia-plugin-persistedstate/nuxt": "^1.0.0",
     "nuxt": "3.0.0"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.4.6",
+    "pinia": "^2.0.28",
     "sweetalert2": "^11.6.16"
   }
 }

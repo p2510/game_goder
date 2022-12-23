@@ -18,5 +18,6 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {},
-  modules: ["@nuxtjs/tailwindcss","@pinia/nuxt"],
+    
+    modules: ["@nuxtjs/tailwindcss",'@pinia/nuxt','@pinia-plugin-persistedstate/nuxt',],
 });
