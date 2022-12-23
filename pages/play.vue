@@ -2,7 +2,7 @@
   <main class="relative w-full h-screen bg-slate-900">
     <span
       class="m-8 text-white font-semibold w-full txt-sm xl:text-lg 2xl:text-xl tracking-wide"
-      >Jeton : {{ initAmount }} F
+      >Jeton(s) : {{ initAmount }} F
     </span>
     <button
       @click="refresh"
@@ -16,8 +16,8 @@
       Début des hostilités
     </h1>
 
-    <div class="absolute top-1/3 flex gap-4 justify-center w-full">
-      <button class="cube-container" @click="play">
+    <div class="absolute top-1/4 flex gap-4 justify-center w-full">
+      <div class="cube-container cursor-pointer" @click="play">
         <div
           class="cube hover:scale-105 transition duration-500 ease-in-out"
           :class="playStatus ? 'spin' : ''"
@@ -68,7 +68,7 @@
             <Point class="absolute top-3/4 left-1/2 ml-2" />
           </div>
         </div>
-      </button>
+      </div>
     </div>
     <section class="w-full absolute top-1/2 grid grid-cols-8">
       <div
@@ -90,9 +90,7 @@
         </div>
       </div>
     </section>
-    <div
-      class="absolute bottom-8 flex gap-4 justify-center w-full"
-    >
+    <div class="absolute bottom-8 flex gap-4 justify-center w-full">
       <button
         @click="play"
         class="bg-yellow-600 hover:scale-105 transition duration-700 ease-in-out font-semibold rounded-lg drop-shadow-xl text-white p-4 sm:py-4 lg:px-10 sm:px-8 text-md sm:text-lg lg:txt-2xl xl:text-3xl 2xl:text-5xl tracking-widest"
@@ -119,19 +117,13 @@ definePageMeta({
   alias: "/jouer",
 });
 // store
-
 const User = user();
-const initAmount: number = User.$state.amount;
-// authorize
+const initAmount: Ref<number> = ref(User.$state.amount);
 
-function authorize(): boolean {
-  return User.$state.amount > 0 ? true : false;
-}
 // start
 let playStatus: Ref<boolean> = ref(false);
-
 let play = () => {
-  if (authorize()) {
+  if (authorizePlay(tabBet)) {
     playStatus.value = true;
     setTimeout(() => {
       function randomIntFromInterval(min: number, max: number) {
@@ -185,7 +177,7 @@ let play = () => {
     }, 2000);
   } else {
     Swal.fire({
-      title: "Champion ton djai est fini ☻ !!!",
+      title: "Désolé , le montant est insuffissant !!!",
       showCancelButton: true,
       showConfirmButton: true,
       color: "orange",
@@ -196,7 +188,7 @@ let play = () => {
   }
 };
 
-// other
+//data
 const tabBet: Ref<{ id: number; amount: number }[]> = ref([]);
 
 let isAddToTab = (id: number) => {
@@ -212,6 +204,7 @@ let isAddToTab = (id: number) => {
 let sendTabBet = (id: number, amount: number) => {
   tabBet.value.push({ id: id, amount: amount });
 };
+
 function bet(id: number) {
   const amount: number = 0;
   const response = Swal.fire({
@@ -226,7 +219,17 @@ function bet(id: number) {
     cancelButtonText: "Annuler",
   }).then((res) => {
     if (res.isConfirmed) {
-      sendTabBet(id, parseInt(res.value));
+      if (parseInt(res.value) <= 0 || res.value == "") {
+        Swal.fire({
+          title: "Cette valeur n'est pas autorisée",
+          showCancelButton: true,
+          showConfirmButton: false,
+          confirmButtonColor: " rgb(202 138 4 )",
+          cancelButtonText: "Fermer",
+        });
+      } else {
+        sendTabBet(id, parseInt(res.value));
+      }
     }
   });
 }
@@ -234,9 +237,28 @@ function bet(id: number) {
 function refresh() {
   location.reload();
 }
+
+onMounted(() => {
+  console.log(controlTimer());
+  if (controlTimer() >= 30) {
+    User.regenerate(5000);
+  }
+  if (controlTimer() !== 0) {
+    Swal.fire({
+      title: "Patientez  !!!",
+      text: `Il reste : ${Math.floor(30-controlTimer() )} minute(s) `,
+      showCancelButton: true,
+      showConfirmButton: true,
+      color: "gray",
+      confirmButtonText: "Continuer",
+      confirmButtonColor: " rgb(202 138 4 )",
+      cancelButtonText: "Fermer",
+    });
+  }
+});
 </script>
 
-<style scoped>
+<style>
 /* Style the container for the cube */
 .cube-container {
   perspective: 1000px;
@@ -250,6 +272,7 @@ function refresh() {
 /* Style the cube */
 .cube {
   width: 100px;
+
   height: 100px;
   transform-style: preserve-3d;
 }
@@ -289,9 +312,23 @@ function refresh() {
 }
 
 /* Animate the cube */
-@keyframes spin {
+@-webkit-keyframes spin {
   from {
     transform: rotateX(0deg);
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateX(360deg);
+  }
+  60% {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+@keyframes spin {
+  from {
     transform: rotateY(0deg);
   }
   50% {

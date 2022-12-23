@@ -10,10 +10,14 @@ export const user = defineStore("user", {
     addAmount(val: number) {
       this.$state.amount += val*3;
     },
+
     removeAmount(val:FormBet[]) {
     val.forEach(item=>{
         this.$state.amount-=item.amount
     })
+    },
+  regenerate(val: number) {
+      this.$state.amount = val;
     },
   },
 
