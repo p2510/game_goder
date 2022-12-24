@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+
 export default defineNuxtConfig({
   ssr: true,
   app: {
@@ -17,7 +18,13 @@ export default defineNuxtConfig({
       link: [{ rel: "icon", type: "image/x-png", href: "/logo.png" }],
     },
   },
-  routeRules: {},
+  routeRules: {
+    '/': { static: true },
+    '/jouer': { static: true },
+  },
     
     modules: ["@nuxtjs/tailwindcss",'@pinia/nuxt','@pinia-plugin-persistedstate/nuxt',],
 });
+
+
+

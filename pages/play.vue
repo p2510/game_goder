@@ -6,10 +6,16 @@
     </span>
     <button
       @click="refresh"
-      class="absolute top-2 right-2 bg-gray-600 hover:scale-105 transition duration-700 ease-in-out font-semibold rounded-lg drop-shadow-xl text-white p-1 sm:py-2 lg:px-4 sm:px-8 text-xs tracking-widest"
+      class="absolute bottom-2 right-2 bg-gray-600 hover:scale-105 transition duration-700 ease-in-out font-semibold rounded-lg drop-shadow-xl text-white p-1 sm:py-2 lg:px-4 sm:px-8 text-xs tracking-widest"
     >
       Actualiser
     </button>
+    <p
+      class="absolute top-2 right-2 opacity-40 bg-gray-600 font-semibold rounded-lg drop-shadow-xl text-white p-1 sm:py-2 lg:px-4 sm:px-8 text-xs tracking-widest"
+    >
+      Joueur: {{ username }}
+    </p>
+
     <h1
       class="absolute top-12 flex justify-center text-white font-semibold text-center w-full text-2xl lg:txt-3xl xl:text-4xl 2xl:text-6xl tracking-widest"
     >
@@ -113,13 +119,16 @@
 import Swal from "sweetalert2";
 import { user } from "@/stores/user";
 import type { Ref } from "vue";
+import {countries} from '@/utils/country'
 definePageMeta({
   alias: "/jouer",
+  middleware: "guest",
 });
 // store
 const User = user();
 const initAmount: Ref<number> = ref(User.$state.amount);
-
+const username: Ref<string> = ref(User.$state.name);
+const country: Ref<string> = ref(countries[parseInt(User.$state.country)]);
 // start
 let playStatus: Ref<boolean> = ref(false);
 let play = () => {
@@ -204,7 +213,6 @@ let isAddToTab = (id: number) => {
 let sendTabBet = (id: number, amount: number) => {
   tabBet.value.push({ id: id, amount: amount });
 };
-
 function bet(id: number) {
   const amount: number = 0;
   const response = Swal.fire({
@@ -238,15 +246,34 @@ function refresh() {
   location.reload();
 }
 
+
+ useFetch(
+  "https://w75mzcji.directus.app/items/bestplayer?limit=1&sort[]=amount"
+).then(res=>{
+  const val:any=res.data.value
+
+   if (initAmount.value>=val.data[0].amount) {
+    useFetch(`https://w75mzcji.directus.app/items/bestplayer/${val.data[0].id}`,{
+      method:'PATCH',
+      body:{
+        country:country.value,
+        name:username.value,
+        amount:initAmount.value
+      }
+    })
+   }
+});
+
+
 onMounted(() => {
-  console.log(controlTimer());
+  // implement timer
   if (controlTimer() >= 30) {
     User.regenerate(5000);
   }
   if (controlTimer() !== 0) {
     Swal.fire({
       title: "Patientez  !!!",
-      text: `Il reste : ${Math.floor(30-controlTimer() )} minute(s) `,
+      text: `Il reste : ${Math.floor(30 - controlTimer())} minute(s) `,
       showCancelButton: true,
       showConfirmButton: true,
       color: "gray",
@@ -255,6 +282,11 @@ onMounted(() => {
       cancelButtonText: "Fermer",
     });
   }
+
+//statistic 
+statisticGame()
+
+  
 });
 </script>
 

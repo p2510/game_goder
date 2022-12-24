@@ -31,12 +31,109 @@
       <h1 class="text-yellow-600">GODER GAME</h1>
     </div>
 
+    <div class="absolute bottom-0 w-full flex flex-col justify-center">
+      <h2 class="text-center text-md md:text-lg text-white font-semibold pb-4">
+        Top 5 joueurs
+      </h2>
+      <ClientOnly>
+        <div v-if="!loading" class="flex w-full justify-center">
+          <table class="bg-slate-800 bg-opacity-50 w-full md:w-1/2">
+            <thead class="bg-slate-800 bg-opacity-50 text-white">
+              <th class="text-sm p-2 tracking-wide text-white">Rang</th>
+              <th class="text-sm p-2 tracking-wide text-white">Joueurs</th>
+              <th class="text-sm p-2 tracking-wide text-white">Pays</th>
+              <th class="text-sm p-2 tracking-wide texwhite">Montants</th>
+            </thead>
+            <tr v-for="(player, index) in topPlalers.data" :key="index">
+              <td class="text-center text-white text-opacity-50 text-xs py-2">
+                {{ index + 1 }}
+              </td>
+              <td class="text-center text-white text-opacity-50 text-xs py-2">
+                {{ player.name }}
+              </td>
+              <td class="text-center text-white text-opacity-50 text-xs py-2">
+                {{ player.country }}
+              </td>
+              <td class="text-center text-white text-opacity-50 text-xs py-2">
+                {{ player.amount }} F
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div v-else class="flex w-full justify-center text-white">
+          chargement . . .
+        </div>
+      </ClientOnly>
+    </div>
   </main>
 </template>
 
 <script setup lang="ts">
+import Swal from "sweetalert2";
+import { user } from "@/stores/user";
+import { countries } from "@/utils/country";
+
+import type { Ref } from "vue";
 definePageMeta({
   alias: "/",
+});
+const User = user();
+const { data: topPlalers, pending: loading } = useFetch(
+  "https://w75mzcji.directus.app/items/bestplayer?limit=5&sort[]=-amount"
+);
+
+onMounted(() => {
+  // create user account
+
+  const name: string = "";
+  if (!isAuth()) {
+    const alert1 = Swal.fire({
+      allowOutsideClick: false,
+      title: "Informations joueurs",
+      input: "text",
+      inputLabel: "Nom du joueur  ",
+      inputValue: name,
+      showCancelButton: false,
+      showConfirmButton: true,
+      confirmButtonText: "Ok",
+      confirmButtonColor: " rgb(202 138 4 )",
+      preConfirm: (res) => {
+        if (res.length <= 0) {
+          Swal.showValidationMessage(
+            "Il faut pas m'énerver !! Il faut mettre ton nom"
+          );
+        } else {
+          User.addName(res);
+        }
+      },
+    }).then((res) => {
+      const country: string = "Côte d'ivoire";
+      const alert2 = Swal.fire({
+        allowOutsideClick: false,
+        title: "Informations joueurs",
+        input: "select",
+        inputOptions: countries,
+        inputLabel: "pays du joueur  ",
+        inputValue: country,
+        showCancelButton: false,
+        showConfirmButton: true,
+        confirmButtonText: "Ok",
+        confirmButtonColor: " rgb(202 138 4 )",
+        preConfirm: (res) => {
+          if (res.length <= 0) {
+            Swal.showValidationMessage(
+              "Toi même ton propre pays tu connais pas ???"
+            );
+          } else {
+            User.addCountry(res);
+          }
+        },
+      });
+    });
+  }
+
+  // statistic
+statisticHome()
 });
 </script>
 
